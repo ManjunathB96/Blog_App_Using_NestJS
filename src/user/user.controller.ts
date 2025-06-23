@@ -9,11 +9,15 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { LoginDto } from './dto/user-login.dto';
+import { CurrentUser } from 'src/auth/decoraters/current-user.decorators';
 
 @Controller('user')
 export class UserController {
@@ -24,10 +28,18 @@ export class UserController {
   async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
     return await this.userService.createUser(createUserDto);
   }
-  @Get(':id')
+  // @UseGuards(JwtAuthGuard)
+  // @Get(':id')
+  // @HttpCode(HttpStatus.OK)
+  // async findOneUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  //   return await this.userService.findOneUser(id);
+  // }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
   @HttpCode(HttpStatus.OK)
-  async findOneUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
-    return await this.userService.findOneUser(id);
+  async getProfile(@CurrentUser() user: any): Promise<User> {
+    return await this.userService.findOneUser(user.userId);
   }
 
   @Get('/')
@@ -45,8 +57,17 @@ export class UserController {
     return await this.userService.updateUser(id, updateUserDto);
   }
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removeUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.userService.removeUser(id);
+  }
+  @Post('login')
+  // async login(@Body() body: { email: string; password: string }) {
+  async login(@Body() loginDto: LoginDto) {
+    return await this.userService.login(loginDto);
+  }
+  @Post('refresh')
+  async refreshToken(@Body('refreshToken') refreshToken: string): Promise<{ access_token: string }> {
+    return await this.userService.refreshToken(refreshToken);
   }
 }
