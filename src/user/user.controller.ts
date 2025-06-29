@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { LoginDto } from './dto/user-login.dto';
 import { CurrentUser } from 'src/auth/decoraters/current-user.decorators';
+import { CustomThrottlerGuard } from 'src/auth/throttler/throttler.guard';
 
 @Controller('user')
 export class UserController {
@@ -35,7 +36,7 @@ export class UserController {
   //   return await this.userService.findOneUser(id);
   // }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CustomThrottlerGuard)
   @Get('profile')
   @HttpCode(HttpStatus.OK)
   async getProfile(@CurrentUser() user: any): Promise<User> {
